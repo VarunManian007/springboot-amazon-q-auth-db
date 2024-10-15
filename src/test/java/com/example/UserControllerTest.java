@@ -1,87 +1,111 @@
 package com.example;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import java.util.Arrays;
+import java.util.List;
+
 import com.example.controller.UserController;
-import com.example.dto.UserDto;
-import com.example.exception.ResourceNotFoundException;
+import com.example.entity.User;
+import com.example.service.UserService;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 public class UserControllerTest {
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private UserController userController;
 
-    private MockMvc mockMvc;
-
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
     }
 
     @Test
-    public void testGetUserById_Success() throws Exception {
-        Long id = 1L;
-        UserDto expectedUser = new UserDto(id, "John Doe", "john.doe@example.com");
+    public void testGetUserById_ExistingUser_ReturnsUser() {
+        Long userId = 1L;
+        User mockUser = new User(userId, "John Doe", "john@example.com", "xyz", "xyz");
+        when(userService.getUserById(userId)).thenReturn(mockUser);
 
-        mockMvc.perform(get("/api/users/{id}", id))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(expectedUser.getId()))
-                .andExpect(jsonPath("$.name").value(expectedUser.getName()))
-                .andExpect(jsonPath("$.email").value(expectedUser.getEmail()));
+        ResponseEntity<User> response = userController.getUserById(userId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockUser, response.getBody());
+        verify(userService, times(1)).getUserById(userId);
     }
 
     @Test
-    public void testCreateUser() throws Exception {
-        UserDto user = new UserDto(1L, "John Doe", "john.doe@example.com");
+    public void testGetUserById_NonExistingUser_ReturnsNotFound() {
+        Long userId = 999L;
+        when(userService.getUserById(userId)).thenReturn(null);
 
-        mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":1,\"name\":\"John Doe\",\"email\":\"john.doe@example.com\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(user.getId()))
-                .andExpect(jsonPath("$.name").value(user.getName()))
-                .andExpect(jsonPath("$.email").value(user.getEmail()));
+        ResponseEntity<User> response = userController.getUserById(userId);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(userService, times(1)).getUserById(userId);
+    }
+
+
+    @Test
+    public void testGetAllUsers_ReturnsListOfUsers() {
+        List<User> mockUsers = Arrays.asList(
+                new User(1L, "John Doe", "john@example.com","xyz", "xyz"),
+                new User(2L, "Jane Doe", "jane@example.com","xyz", "xyz")
+        );
+        when(userService.getAllUsers()).thenReturn(mockUsers);
+
+        ResponseEntity<List<User>> response = userController.getAllUsers();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockUsers, response.getBody());
+        assertEquals(2, response.getBody().size());
+        verify(userService, times(1)).getAllUsers();
     }
 
     @Test
-    public void testGetUserNames() throws Exception {
-        mockMvc.perform(get("/api/users/names"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0]").value("alice"))
-                .andExpect(jsonPath("$[1]").value("bob"))
-                .andExpect(jsonPath("$[2]").value("charlie"));
+    public void testCreateUser_ValidUser_ReturnsCreatedUser() {
+        User newUser = new User(null, "Alice Smith", "alice@example.com","xyz", "xyz");
+        User createdUser = new User(3L, "Alice Smith", "alice@example.com","xyz", "xyz");
+        when(userService.createUser(newUser)).thenReturn(createdUser);
+
+        ResponseEntity<User> response = userController.createUser(newUser);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(createdUser, response.getBody());
+        verify(userService, times(1)).createUser(newUser);
     }
 
-    @Test
-    public void testGetIdByName_ValidId() throws Exception {
-        int id = 1;
-
-        mockMvc.perform(get("/api/users/getIdByName/{id}", id))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
-                .andExpect(content().string("Monday"));
-    }
-
-    @Test
-    public void testGetIdByName_UnknownId() throws Exception {
-        int id = 5;
-
-        mockMvc.perform(get("/api/users/getIdByName/{id}", id))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
-                .andExpect(content().string("Unknown"));
-    }
+//    @Test
+//    public void testUpdateUser_ExistingUser_ReturnsUpdatedUser() {
+//        Long userId = 1L;
+//        User updatedUser = new User(userId, "John Updated", "john.updated@example.com","xyz", "xyz");
+//        when(userService.updateUser(eq(userId), any(User.class))).thenReturn(updatedUser);
+//
+//        ResponseEntity<User> response = userController.updateUser(userId, updatedUser);
+//
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//        assertEquals(updatedUser, response.getBody());
+//        verify(userService, times(1)).updateUser(eq(userId), any(User.class));
+//    }
+//
+//    @Test
+//    public void testDeleteUser_ExistingUser_ReturnsNoContent() {
+//        Long userId = 1L;
+//        doNothing().when(userService).deleteUser(userId);
+//
+//        ResponseEntity<Void> response = userController.deleteUser(userId);
+//
+//        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+//        verify(userService, times(1)).deleteUser(userId);
+//    }
 }

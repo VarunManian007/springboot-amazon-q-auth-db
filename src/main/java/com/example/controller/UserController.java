@@ -40,13 +40,19 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.createUser(user);
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+        User createUser = userService.createUser(user);
+        if (createUser != null) {
+            return ResponseEntity.ok(createUser);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @PostMapping("/authenticate")
