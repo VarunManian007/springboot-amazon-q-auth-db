@@ -31,8 +31,13 @@ jobs:
       run: mvn -B package --file pom.xml
     - name: Run Tests
       run: mvn test
-    # Install dependencies
-    # Download and extract Amazon Q Developer AppImage
+    # Install required graphics libraries
+    - name: Install Graphics Libraries
+      run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1-mesa-glx libegl1-mesa libxrandr2 libxkbcommon-x11-0 libxcb-xinerama0
+
+      # Download and extract the AppImage
     - name: Extract Amazon Q Developer AppImage
       run: |
           curl --proto '=https' --tlsv1.2 -sSf https://desktop-release.q.us-east-1.amazonaws.com/latest/amazon-q.appimage -o amazon-q.appimage
