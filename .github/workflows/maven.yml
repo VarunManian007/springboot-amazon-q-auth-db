@@ -48,4 +48,4 @@ jobs:
     - name: Run Amazon Q Developer Analysis
       run: |
           cd squashfs-root
-          ./AppRun analyze .
+          ./AppRun analyze
