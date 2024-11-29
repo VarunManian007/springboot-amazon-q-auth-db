@@ -33,7 +33,9 @@ jobs:
       run: mvn test
     # Install dependencies
     - name: Install Dependencies
-      run: sudo apt-get update && sudo apt-get install -y libfuse2
+      run: |
+            sudo apt-get update
+            sudo apt-get install -y libegl1 libgl1-mesa-glx libegl1-mesa libxrandr2 libxkbcommon-x11-0 libxcb-xinerama0
     # Download Amazon Q Developer CLI AppImage
     - name: Download Amazon Q Developer CLI
       run: |
