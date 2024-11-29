@@ -32,16 +32,15 @@ jobs:
     - name: Run Tests
       run: mvn test
     # Install dependencies
-    - name: Install Dependencies
-      run: |
-            sudo apt-get update
-            sudo apt-get install -y libegl1 libgl1-mesa-glx libegl1-mesa libxrandr2 libxkbcommon-x11-0 libxcb-xinerama0
-    # Download Amazon Q Developer CLI AppImage
-    - name: Download Amazon Q Developer CLI
+    # Download and extract Amazon Q Developer AppImage
+    - name: Extract Amazon Q Developer AppImage
       run: |
           curl --proto '=https' --tlsv1.2 -sSf https://desktop-release.q.us-east-1.amazonaws.com/latest/amazon-q.appimage -o amazon-q.appimage
           chmod +x amazon-q.appimage
+          ./amazon-q.appimage --appimage-extract
 
-      # Run Amazon Q Developer Analysis
+      # Run the extracted application
     - name: Run Amazon Q Developer Analysis
-      run: ./amazon-q.appimage analyze .
+      run: |
+          cd squashfs-root
+          ./AppRun analyze .
