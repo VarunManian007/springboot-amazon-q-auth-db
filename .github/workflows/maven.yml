@@ -31,5 +31,15 @@ jobs:
       run: mvn -B package --file pom.xml
     - name: Run Tests
       run: mvn test
-    - name: Run Q Developer Tests
-      run: q-developer analyze .
+    # Install dependencies
+    - name: Install Dependencies
+      run: sudo apt-get update && sudo apt-get install -y libfuse2
+    # Download Amazon Q Developer CLI AppImage
+    - name: Download Amazon Q Developer CLI
+      run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://desktop-release.q.us-east-1.amazonaws.com/latest/amazon-q.appimage -o amazon-q.appimage
+          chmod +x amazon-q.appimage
+
+      # Run Amazon Q Developer Analysis
+    - name: Run Amazon Q Developer Analysis
+      run: ./amazon-q.appimage analyze .
